@@ -7,17 +7,46 @@
 //
 
 #import "AppDelegate.h"
+#import "AllListsViewController.h"
+#import "DataModel.h"
 
 @interface AppDelegate ()
 
 @end
 
 @implementation AppDelegate
+{
+    DataModel *_dataModel;
+}
+
+- (void)saveData {
+    [_dataModel saveChecklists];
+}
+
+- (void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification completionHandler:(void (^)())completionHandler {
+    if ([identifier isEqualToString: @"ACCEPT_IDENTIFIER"]) {
+        NSLog(@"got it");
+        application.applicationIconBadgeNumber = 1;
+    }
+    completionHandler();
+}
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    _dataModel = [[DataModel alloc] init];
+    UINavigationController *navigationController = (UINavigationController *)self.window.rootViewController;
+    AllListsViewController *controller = navigationController.viewControllers[0];
+    controller.dataModal = _dataModel;
+    
+    // iOS 8 及以上需要先注册 notificatin
+    [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes: UIUserNotificationTypeAlert | UIUserNotificationTypeBadge | UIUserNotificationTypeSound categories:nil]];
+    
     return YES;
+}
+
+- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification {
+//    NSLog(@"%@", notification.alertBody);
+    application.applicationIconBadgeNumber = 10;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -26,6 +55,7 @@
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
+    [self saveData];
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
@@ -39,6 +69,7 @@
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
+    [self saveData];
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
